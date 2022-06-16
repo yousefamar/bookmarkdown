@@ -1,28 +1,72 @@
 import { DateTime } from "luxon";
 import { useEffect, useState } from "react"
+import { useStorage } from '@plasmohq/storage';
 import "./popup.css";
 
 function IndexPopup() {
   const [ isLoading, setIsLoading ] = useState(true);
-  const [ archiveState, setArchiveState ] = useState<'archiving' | 'archived' | 'failed'>('archiving');
+  const [ archiveState, setArchiveState ] = useState<'unarchived' | 'archiving' | 'archived' | 'failed'>('unarchived');
+  const [ summariseState, setSummariseState ] = useState<'unsummarised' | 'summarising' | 'summarised' | 'failed'>('unsummarised');
+  const [ smmryKey, setSmmryKey ] = useStorage('smmryKey', '');
+  const [ summary, setSummary ] = useState("");
   const [ content, setContent ] = useState("");
+
+  const archive = async () => {
+    setArchiveState('archiving');
+    const [ tab ] = await chrome.tabs.query({ active: true, currentWindow: true });
+    const { url } = tab;
+    // Save to wayback machine
+    try {
+      await fetch('https://web.archive.org/save/' + url);
+      setArchiveState('archived');
+    } catch (error) {
+      setArchiveState('failed');
+    }
+  };
+
+  const summarise = async () => {
+    setSummariseState('summarising');
+
+    const [ tab ] = await chrome.tabs.query({ active: true, currentWindow: true });
+    const { url } = tab;
+
+    let key = smmryKey;
+
+    if (!key)
+      key = prompt('Please enter an API key from https://smmry.com/partner');
+
+    if (!key) {
+      setSummariseState('failed');
+      return;
+    }
+    setSmmryKey(key);
+
+    try {
+      const response = await fetch(`https://api.smmry.com/&SM_API_KEY=${key}&SM_URL=${url}`);
+      const smData = await response.json();
+      console.log(smData);
+
+      if (smData?.sm_api_error)
+        throw new Error(smData?.sm_api_message);
+      
+      setSummary(smData?.sm_api_content || '');
+      setSummariseState('summarised');
+    } catch (error) {
+      alert(error.message);
+      setSummariseState('failed');
+    }
+  };
 
   useEffect(() => {
     (async () => {
       const [ tab ] = await chrome.tabs.query({ active: true, currentWindow: true });
       const { url, title } = tab;
       const date = DateTime.now();
-      console.log(tab);
 
-      // Save to wayback machine
-      // fetch('https://web.archive.org/save/' + url).then(() => {
-      //   setArchiveState('archived');
-      // }).catch(() => {
-      //   setArchiveState('failed');
-      // });
+      const { description, title: metaTitle } : { description?: string, title?: string } = await new Promise(resolve => chrome.tabs.sendMessage(tab.id, null, resolve));
 
       setContent(`---
-title: ${title}
+title: ${metaTitle || title}
 date: ${date.toString()}
 breadcrumbs: true
 public: true
@@ -30,13 +74,14 @@ listed: true
 ---
 
 Original URL: ${url}
-Archive URL: https://web.archive.org/web/${date.toFormat('yyyyMMddHHmmss')}/${url}
+Archive URL: https://web.archive.org/web/${date.toFormat('yyyyMMddHHmmss')}/${url}${description ? `\n\nDescription: ${description}` : ''}${summary ? `\n\nSummary: ${summary}` : ''}
 
+## Notes
 
-      `)
+`);
       setIsLoading(false);
     })();
-  }, []);
+  }, [ summary ]);
 
   const download = async () => {
     const filename = 'bookmarks/test.md';
@@ -71,7 +116,34 @@ Archive URL: https://web.archive.org/web/${date.toFormat('yyyyMMddHHmmss')}/${ur
       }}>
         Bookmarkdown
       </h4>
-      <p>Archive status: { archiveState }</p>
+      <div style={{
+        display: 'flex',
+        flexDirection: 'column',
+        width: '100%',
+        marginTop: 16,
+        marginBottom: 16,
+      }}>
+        <div style={{
+          display: 'flex',
+          justifyContent: 'space-between',
+        }}>
+          <p>Archive status: {archiveState}</p>
+          <button disabled={archiveState !== 'unarchived' && archiveState !== 'failed'} style={{
+            display: 'inline',
+            width: '30%',
+          }} onClick={archive}>Archive</button>
+        </div>
+        <div style={{
+          display: 'flex',
+          justifyContent: 'space-between',
+        }}>
+          <p>Summary status: {summariseState}</p>
+          <button disabled={summariseState !== 'unsummarised' && summariseState !== 'failed'} style={{
+            display: 'inline',
+            width: '30%',
+          }} onClick={summarise}>Summarise</button>
+        </div>
+      </div>
       <textarea onChange={(e) => setContent(e.target.value)} value={content} rows={10} cols={50} />
       <button style={{
         marginTop: 16,
