@@ -1,4 +1,5 @@
 import { DateTime } from "luxon";
+import slugify from "slugify";
 import { useEffect, useState } from "react"
 import { useStorage } from '@plasmohq/storage';
 import "./popup.css";
@@ -10,6 +11,7 @@ function IndexPopup() {
   const [ smmryKey, setSmmryKey ] = useStorage('smmryKey', '');
   const [ summary, setSummary ] = useState("");
   const [ content, setContent ] = useState("");
+  const [ _title, _setTitle ] = useState("");
 
   const archive = async () => {
     setArchiveState('archiving');
@@ -65,6 +67,7 @@ function IndexPopup() {
 
       const { description, title: metaTitle } : { description?: string, title?: string } = await new Promise(resolve => chrome.tabs.sendMessage(tab.id, null, resolve));
 
+      _setTitle(metaTitle || title);
       setContent(`---
 title: ${metaTitle || title}
 date: ${date.toString()}
@@ -84,12 +87,17 @@ Archive URL: https://web.archive.org/web/${date.toFormat('yyyyMMddHHmmss')}/${ur
   }, [ summary ]);
 
   const download = async () => {
-    const filename = 'bookmarks/test.md';
+    const [ tab ] = await chrome.tabs.query({ active: true, currentWindow: true });
+    const { url } = tab;
+
+    const slug = slugify(_title || new URL(url).hostname || 'bookmark', { strict: true, lower: true });
+    const filename = `bookmarks/${slug}.md`;
 
     // Download text as file
     const downloadId = await chrome.downloads.download({
       url: URL.createObjectURL(new Blob([content], { type: "text/markdown; charset=UTF-8" })),
       filename,
+      saveAs: true,
     });
 
     console.log(downloadId);
