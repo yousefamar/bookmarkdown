@@ -1,0 +1,52 @@
+@import "https://cdn.jsdelivr.net/npm/water.css@2/out/dark.min.css";
+
+/* TODO: Centralise */
+:root {
+  --background-body: #030c22;
+  --background: #030c22;
+  --background-alt: #20293f;
+  --text-main: #a9b0b3;
+  --text-bright: #fff;
+  --text-muted: #a9b0b3;
+  --scrollbar-thumb: #a9b0b3;
+  --scrollbar-thumb-hover: #fff;
+  --links: #e0d498;
+  --focus: var(--text-main);
+  --form-text: var(--text-main);
+  --border: #e0d498;
+  --code: #000;
+  --button-base: #282836;
+  --button-hover: #eee;
+}
+
+textarea {
+  background-color: var(--background-alt);
+}
+
+button {
+  color: var(--links);
+	font-weight: bold;
+}
+
+button:hover {
+  color: #3e3e53;
+}
+
+.loading {
+  display: inline-block;
+  width: 50px;
+  height: 50px;
+  border: 3px solid var(--text-main);
+  border-radius: 50%;
+  border-top-color: var(--text-bright);
+  animation: spin 1s ease-in-out infinite;
+  -webkit-animation: spin 1s ease-in-out infinite;
+  margin: 50px 100px;
+}
+
+@keyframes spin {
+  to { -webkit-transform: rotate(360deg); }
+}
+@-webkit-keyframes spin {
+  to { -webkit-transform: rotate(360deg); }
+}
