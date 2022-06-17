@@ -71,13 +71,12 @@ function IndexPopup() {
       setContent(`---
 title: ${metaTitle || title}
 date: ${date.toString()}
-breadcrumbs: true
 public: true
 listed: true
 ---
 
-Original URL: ${url}
-Archive URL: https://web.archive.org/web/${date.toFormat('yyyyMMddHHmmss')}/${url}${description ? `\n\nDescription: ${description}` : ''}${summary ? `\n\nSummary: ${summary}` : ''}
+[Original](${url})
+[Archive](https://web.archive.org/web/${date.toFormat('yyyyMMddHHmmss')}/${url})${description ? `\n\n## Description\n\n${description}` : ''}${summary ? `\n\n## Summary\n\n${summary}` : ''}
 
 ## Notes
 
