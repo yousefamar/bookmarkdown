@@ -30,4 +30,6 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     description: info['description'] || info['og:description'] || info['summary'] || info['abstract'] || info['topic'],
     title: info['og:title'] || info['og:site_name'],
   });
+
+  return true;
 });
