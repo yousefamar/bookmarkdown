@@ -76,6 +76,7 @@ listed: true
 ---
 
 [Original](${url})
+|
 [Archive](https://web.archive.org/web/${date.toFormat('yyyyMMddHHmmss')}/${url})${description ? `\n\n## Description\n\n${description}` : ''}${summary ? `\n\n## Summary\n\n${summary}` : ''}
 
 ## Notes
