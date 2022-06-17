@@ -28,6 +28,7 @@
   },
   "manifest": {
     "host_permissions": [
+      "http://*/*",
       "https://*/*"
     ],
     "permissions": [
